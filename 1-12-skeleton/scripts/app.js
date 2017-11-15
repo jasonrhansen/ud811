@@ -111,7 +111,7 @@
 
     // Only update card if the passed in data is newer than what we already have.
     var dateElem = card.querySelector('.date');
-    if (dataElem.getAttribute('data-dt') >= data.currently.time) {
+    if (dateElem.dataset.dt >= data.currently.time) {
       return;
     }
 
