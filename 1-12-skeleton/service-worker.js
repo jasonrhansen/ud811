@@ -1,3 +1,4 @@
+var dataCacheName = 'weatherData-v1';
 var cacheName = 'weatherPWA-v1';
 var filesToCache = [
   '/',
@@ -21,6 +22,8 @@ var filesToCache = [
   '/images/wind.png'
 ];
 
+var weatherAPIUrlBase = 'https://publicdata-weather.firebaseio.com/';
+
 this.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(cacheName).then(function(cache) {
@@ -33,7 +36,7 @@ this.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(keyList) {
       return Promise.all(keyList.map(function(key) {
-        if (key !== cacheName) {
+        if (key !== cacheName && key !== dataCacheName) {
           return caches.delete(key);
         }
       }));
@@ -42,9 +45,20 @@ this.addEventListener('activate', function(event) {
 });
 
 this.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.match(event.request).then(function(response) {
-      return response || fetch(event.request);
-    })
-  );
+  if (event.request.url.startsWith(weatherAPIUrlBase)) {
+    event.respondWith(
+      fetch(event.request).then(function(response) {
+        return caches.open(dataCacheName).then(function(cache) {
+          cache.put(event.request.url, response.clone());
+          return response;
+        });
+      })
+    )
+  } else {
+    event.respondWith(
+      caches.match(event.request).then(function(response) {
+        return response || fetch(event.request);
+      })
+    );
+  }
 });
